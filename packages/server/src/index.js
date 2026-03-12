@@ -5,6 +5,8 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { WorldState } from "./world-state.js";
+import { LEVEL_OBSTACLES } from "../../shared/src/level-data.js";
+import { terrainHeight } from "../../shared/src/terrain.js";
 
 const TICK_HZ = 20;
 const tickMs = Math.round(1000 / TICK_HZ);
@@ -28,8 +30,10 @@ const SIMULATION_CONFIG = {
   airFriction: 2.0,
   worldHalfExtent: 248.0,
   playerCollisionRadius: 0.75,
-  playerCollisionRestitution: 0.93,
-  playerCollisionIterations: 3,
+  playerCollisionRestitution: 0.12,
+  playerCollisionIterations: 2,
+  levelObstacles: LEVEL_OBSTACLES,
+  groundHeightAt: terrainHeight,
 };
 const WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 const PORT = Number(process.env.PORT || 8010);

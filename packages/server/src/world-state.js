@@ -23,6 +23,7 @@ export class WorldState {
         z: player.position.z,
       });
       player.simulateTick(dtSeconds, config);
+      this.resolveLevelCollisions(player, config);
     }
     this.resolvePlayerCollisions(config, previousPositionsById);
     return this.tick;
@@ -75,7 +76,7 @@ export class WorldState {
           const b = players[j];
 
           const dx = b.position.x - a.position.x;
-          const dy = b.position.y - a.position.y;
+          const dy = 0;
           const dz = b.position.z - a.position.z;
           const distanceSq = dx * dx + dy * dy + dz * dz;
           if (distanceSq >= minDistanceSq) {
@@ -88,7 +89,7 @@ export class WorldState {
           let distance = Math.sqrt(distanceSq);
           if (distance <= tiny) {
             const rvx = b.velocity.x - a.velocity.x;
-            const rvy = b.velocity.y - a.velocity.y;
+            const rvy = 0;
             const rvz = b.velocity.z - a.velocity.z;
             const relativeLen = Math.hypot(rvx, rvy, rvz);
             if (relativeLen > tiny) {
@@ -121,7 +122,7 @@ export class WorldState {
           const previousA = previousPositionsById.get(a.playerId);
           const previousB = previousPositionsById.get(b.playerId);
           const previousDx = previousA && previousB ? previousB.x - previousA.x : 0;
-          const previousDy = previousA && previousB ? previousB.y - previousA.y : 0;
+          const previousDy = 0;
           const previousDz = previousA && previousB ? previousB.z - previousA.z : 0;
           const previousDistance =
             previousA && previousB
@@ -130,7 +131,7 @@ export class WorldState {
           const movedCloserThisTick = Number.isFinite(previousDistance) && previousDistance > distance;
 
           let rvx = b.velocity.x - a.velocity.x;
-          let rvy = b.velocity.y - a.velocity.y;
+          let rvy = 0;
           let rvz = b.velocity.z - a.velocity.z;
           let closingVelocity = rvx * nx + rvy * ny + rvz * nz;
           if (closingVelocity >= 0 && movedCloserThisTick && previousDistance > tiny) {
@@ -138,7 +139,7 @@ export class WorldState {
             ny = previousDy / previousDistance;
             nz = previousDz / previousDistance;
             rvx = b.velocity.x - a.velocity.x;
-            rvy = b.velocity.y - a.velocity.y;
+            rvy = 0;
             rvz = b.velocity.z - a.velocity.z;
             closingVelocity = rvx * nx + rvy * ny + rvz * nz;
           }
@@ -149,10 +150,10 @@ export class WorldState {
             const impulseY = ny * impulseMagnitude;
             const impulseZ = nz * impulseMagnitude;
             a.velocity.x -= impulseX;
-            a.velocity.y -= impulseY;
+            a.velocity.y -= impulseY * 0.05;
             a.velocity.z -= impulseZ;
             b.velocity.x += impulseX;
-            b.velocity.y += impulseY;
+            b.velocity.y += impulseY * 0.05;
             b.velocity.z += impulseZ;
 
             if (pass === 0 && impulseMagnitude > 0.08) {
@@ -173,6 +174,137 @@ export class WorldState {
       }
     }
   }
+
+  resolveLevelCollisions(player, config) {
+    const obstacles = Array.isArray(config.levelObstacles) ? config.levelObstacles : [];
+    if (obstacles.length === 0) {
+      return;
+    }
+
+    const playerRadius = config.playerCollisionRadius ?? 0.75;
+    const tiny = 1e-8;
+
+    for (const obstacle of obstacles) {
+      if (!obstacle || typeof obstacle !== "object") {
+        continue;
+      }
+      const obstacleHeight = Math.max(0, Number(obstacle.height) || 0);
+      const obstacleBaseY = typeof config.groundHeightAt === "function"
+        ? config.groundHeightAt(Number(obstacle.x) || 0, Number(obstacle.z) || 0)
+        : config.groundY;
+      if (player.position.y > obstacleBaseY + obstacleHeight + playerRadius * 1.1) {
+        continue;
+      }
+
+      const kind = typeof obstacle.kind === "string" ? obstacle.kind : "";
+      if (kind === "wall") {
+        resolveWallCollision(player, obstacle, playerRadius, tiny);
+      } else {
+        resolveRoundObstacleCollision(player, obstacle, playerRadius, tiny);
+      }
+    }
+
+    player.enforceWorldBounds(config);
+    enforceGroundContact(player, config);
+  }
+}
+
+function resolveRoundObstacleCollision(player, obstacle, playerRadius, tiny) {
+  const obstacleRadius = Math.max(0, Number(obstacle.radius) || 0);
+  if (obstacleRadius <= 0) {
+    return;
+  }
+
+  const dx = player.position.x - (Number(obstacle.x) || 0);
+  const dz = player.position.z - (Number(obstacle.z) || 0);
+  const distanceSq = dx * dx + dz * dz;
+  const minDistance = obstacleRadius + playerRadius;
+  if (distanceSq >= minDistance * minDistance) {
+    return;
+  }
+
+  let nx = dx;
+  let nz = dz;
+  let distance = Math.sqrt(distanceSq);
+  if (distance <= tiny) {
+    nx = 1;
+    nz = 0;
+    distance = 0;
+  } else {
+    nx /= distance;
+    nz /= distance;
+  }
+
+  const penetration = minDistance - distance;
+  player.position.x += nx * penetration;
+  player.position.z += nz * penetration;
+
+  const normalVelocity = player.velocity.x * nx + player.velocity.z * nz;
+  if (normalVelocity < 0) {
+    player.velocity.x -= nx * normalVelocity;
+    player.velocity.z -= nz * normalVelocity;
+  }
+}
+
+function resolveWallCollision(player, obstacle, playerRadius, tiny) {
+  const ox = Number(obstacle.x) || 0;
+  const oz = Number(obstacle.z) || 0;
+  const halfWidth = Math.max(0, (Number(obstacle.width) || 0) * 0.5);
+  const halfDepth = Math.max(0, (Number(obstacle.depth) || 0) * 0.5);
+  if (halfWidth <= 0 || halfDepth <= 0) {
+    return;
+  }
+
+  const yaw = Number(obstacle.yaw) || 0;
+  const cosYaw = Math.cos(-yaw);
+  const sinYaw = Math.sin(-yaw);
+  const relX = player.position.x - ox;
+  const relZ = player.position.z - oz;
+  const localX = relX * cosYaw - relZ * sinYaw;
+  const localZ = relX * sinYaw + relZ * cosYaw;
+
+  const nearestX = clamp(localX, -halfWidth, halfWidth);
+  const nearestZ = clamp(localZ, -halfDepth, halfDepth);
+  const deltaX = localX - nearestX;
+  const deltaZ = localZ - nearestZ;
+  const distanceSq = deltaX * deltaX + deltaZ * deltaZ;
+  if (distanceSq >= playerRadius * playerRadius) {
+    return;
+  }
+
+  let normalX = deltaX;
+  let normalZ = deltaZ;
+  let penetration;
+  const distance = Math.sqrt(distanceSq);
+
+  if (distance > tiny) {
+    normalX /= distance;
+    normalZ /= distance;
+    penetration = playerRadius - distance;
+  } else {
+    const overlapX = halfWidth + playerRadius - Math.abs(localX);
+    const overlapZ = halfDepth + playerRadius - Math.abs(localZ);
+    if (overlapX < overlapZ) {
+      normalX = localX >= 0 ? 1 : -1;
+      normalZ = 0;
+      penetration = overlapX;
+    } else {
+      normalX = 0;
+      normalZ = localZ >= 0 ? 1 : -1;
+      penetration = overlapZ;
+    }
+  }
+
+  const worldNormalX = normalX * Math.cos(yaw) - normalZ * Math.sin(yaw);
+  const worldNormalZ = normalX * Math.sin(yaw) + normalZ * Math.cos(yaw);
+  player.position.x += worldNormalX * penetration;
+  player.position.z += worldNormalZ * penetration;
+
+  const normalVelocity = player.velocity.x * worldNormalX + player.velocity.z * worldNormalZ;
+  if (normalVelocity < 0) {
+    player.velocity.x -= worldNormalX * normalVelocity;
+    player.velocity.z -= worldNormalZ * normalVelocity;
+  }
 }
 
 function clamp01(value) {
@@ -182,9 +314,19 @@ function clamp01(value) {
   return Math.max(0, Math.min(1, value));
 }
 
+function clamp(value, min, max) {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+  return Math.max(min, Math.min(max, value));
+}
+
 function enforceGroundContact(player, config) {
-  if (player.position.y <= config.groundY) {
-    player.position.y = config.groundY;
+  const groundY = typeof config.groundHeightAt === "function"
+    ? config.groundHeightAt(player.position.x, player.position.z)
+    : config.groundY;
+  if (player.position.y <= groundY) {
+    player.position.y = groundY;
     if (player.velocity.y < 0) {
       player.velocity.y = 0;
     }

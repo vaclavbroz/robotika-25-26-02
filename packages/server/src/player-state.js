@@ -115,8 +115,12 @@ export class PlayerState {
     this.position.y += this.velocity.y * dtSeconds;
     this.position.z += this.velocity.z * dtSeconds;
 
-    if (this.position.y <= config.groundY) {
-      this.position.y = config.groundY;
+    const groundY = typeof config.groundHeightAt === "function"
+      ? config.groundHeightAt(this.position.x, this.position.z)
+      : config.groundY;
+
+    if (this.position.y <= groundY) {
+      this.position.y = groundY;
       this.velocity.y = 0;
       this.onGround = true;
     } else {

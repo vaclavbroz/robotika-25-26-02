@@ -1,0 +1,52 @@
+export const TEMPLE_CENTER = Object.freeze({ x: 0, z: -154 });
+export const TEMPLE_GOAL_CENTER = Object.freeze({ x: 0, z: -196 });
+export const TEMPLE_SANCTUARY_RADIUS = 7;
+
+export const LEVEL_OBSTACLES = Object.freeze([
+  { x: -7, z: -24, radius: 3.8, height: 3.2, kind: "log", yaw: 0.35 },
+  { x: 8, z: -34, radius: 4.4, height: 3.4, kind: "rock", yaw: -0.2 },
+  { x: -14, z: -46, radius: 3.4, height: 3.1, kind: "rock", yaw: 0.1 },
+  { x: 13, z: -57, radius: 4.0, height: 3.3, kind: "log", yaw: -0.45 },
+  { x: -4, z: -68, radius: 4.6, height: 3.6, kind: "rock", yaw: 0.2 },
+  { x: 15, z: -79, radius: 3.5, height: 3.2, kind: "rock", yaw: 0.5 },
+  { x: -16, z: -90, radius: 4.2, height: 3.4, kind: "log", yaw: 0.55 },
+  { x: 5, z: -98, radius: 4.0, height: 3.0, kind: "rock", yaw: -0.4 },
+  { x: -10, z: -112, radius: 3.4, height: 3.2, kind: "rock", yaw: 0.25 },
+  { x: 11, z: -124, radius: 3.8, height: 3.1, kind: "log", yaw: -0.5 },
+  { x: -6, z: -136, radius: 4.2, height: 3.6, kind: "rock", yaw: 0.18 },
+
+  { x: -12.5, z: -140, width: 5, depth: 2.4, height: 6.5, kind: "wall", yaw: 0 },
+  { x: 12.5, z: -140, width: 5, depth: 2.4, height: 6.5, kind: "wall", yaw: 0 },
+  { x: -15.2, z: -154, width: 2.4, depth: 30, height: 6.5, kind: "wall", yaw: 0 },
+  { x: 15.2, z: -154, width: 2.4, depth: 30, height: 6.5, kind: "wall", yaw: 0 },
+  { x: -7.5, z: -168, width: 9, depth: 2.2, height: 6.5, kind: "wall", yaw: 0 },
+  { x: 7.5, z: -168, width: 9, depth: 2.2, height: 6.5, kind: "wall", yaw: 0 },
+  { x: -11.5, z: -145.2, radius: 2.2, height: 7.0, kind: "pillar", yaw: 0 },
+  { x: 11.5, z: -145.2, radius: 2.2, height: 7.0, kind: "pillar", yaw: 0 },
+  { x: -11.5, z: -162.8, radius: 2.2, height: 7.0, kind: "pillar", yaw: 0 },
+  { x: 11.5, z: -162.8, radius: 2.2, height: 7.0, kind: "pillar", yaw: 0 },
+
+  { x: -7.2, z: -153.5, width: 3.2, depth: 2.0, height: 4.2, kind: "wall", yaw: 0.08 },
+  { x: 7.2, z: -153.5, width: 3.2, depth: 2.0, height: 4.2, kind: "wall", yaw: -0.08 },
+  { x: -7.8, z: -158, width: 2.0, depth: 9.5, height: 4.2, kind: "wall", yaw: -0.08 },
+  { x: 7.8, z: -158, width: 2.0, depth: 9.5, height: 4.2, kind: "wall", yaw: 0.08 },
+  { x: -6.5, z: -163, width: 3.2, depth: 2.2, height: 4.2, kind: "wall", yaw: -0.04 },
+  { x: 6.5, z: -163, width: 3.2, depth: 2.2, height: 4.2, kind: "wall", yaw: 0.04 },
+  { x: -11.8, z: -155.5, radius: 2.5, height: 3.4, kind: "rock", yaw: 0.2 },
+  { x: 11.8, z: -155.5, radius: 2.5, height: 3.4, kind: "rock", yaw: -0.2 },
+  { x: -8.2, z: -160.5, radius: 2.6, height: 3.5, kind: "rock", yaw: 0.2 },
+  { x: 8.1, z: -160.7, radius: 2.6, height: 3.5, kind: "rock", yaw: -0.2 },
+  { x: -9.8, z: -160.2, radius: 2.1, height: 2.8, kind: "log", yaw: 0.8 },
+  { x: 9.8, z: -160.2, radius: 2.1, height: 2.8, kind: "log", yaw: -0.7 },
+
+  { x: -7.2, z: -187, width: 2.4, depth: 40, height: 7.5, kind: "wall", yaw: 0 },
+  { x: 7.2, z: -187, width: 2.4, depth: 40, height: 7.5, kind: "wall", yaw: 0 },
+  { x: 0, z: -208, width: 16, depth: 2.4, height: 7.5, kind: "wall", yaw: 0 },
+  { x: -2.6, z: -176.5, width: 5.2, depth: 2.0, height: 3.6, kind: "wall", yaw: 0.1 },
+  { x: 2.8, z: -182.5, width: 5.6, depth: 2.0, height: 3.6, kind: "wall", yaw: -0.1 },
+  { x: -2.4, z: -188.8, width: 5.2, depth: 2.0, height: 3.6, kind: "wall", yaw: -0.08 },
+  { x: 2.6, z: -195.2, width: 5.4, depth: 2.0, height: 3.6, kind: "wall", yaw: 0.08 },
+  { x: -1.4, z: -201.4, radius: 2.2, height: 3.0, kind: "rock", yaw: 0 },
+  { x: 1.8, z: -171.8, radius: 2.0, height: 2.8, kind: "log", yaw: 1.1 },
+  { x: -1.9, z: -184.8, radius: 1.9, height: 2.8, kind: "log", yaw: -1.05 },
+]);
